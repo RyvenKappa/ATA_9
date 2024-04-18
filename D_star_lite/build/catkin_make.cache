@@ -1,0 +1,2 @@
+waffle_lab
+-DCATKIN_DEVEL_PREFIX=/home/ryven/D-Star-Lite-Implementation-on-Turtlebot3-Waffle-/D_star_lite/devel -DCMAKE_INSTALL_PREFIX=/home/ryven/D-Star-Lite-Implementation-on-Turtlebot3-Waffle-/D_star_lite/install -G Unix Makefiles

@@ -1,0 +1,8 @@
+prefix=/home/ryven/D-Star-Lite-Implementation-on-Turtlebot3-Waffle-/D_star_lite/devel
+
+Name: waffle_lab
+Description: Description of waffle_lab
+Version: 0.0.0
+Cflags: -I/home/ryven/D-Star-Lite-Implementation-on-Turtlebot3-Waffle-/D_star_lite/devel/include
+Libs: -L${prefix}/lib 
+Requires: message_runtime

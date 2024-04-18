@@ -1,0 +1,9 @@
+file(REMOVE_RECURSE
+  "/home/ryven/D-Star-Lite-Implementation-on-Turtlebot3-Waffle-/D_star_lite/devel/share/gennodejs/ros/waffle_lab/msg/my_msg.js"
+  "CMakeFiles/waffle_lab_generate_messages_nodejs"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang )
+  include(CMakeFiles/waffle_lab_generate_messages_nodejs.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
