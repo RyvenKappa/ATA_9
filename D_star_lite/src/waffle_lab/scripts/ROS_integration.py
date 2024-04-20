@@ -11,6 +11,9 @@ import time
 import matplotlib.pyplot as plt
 from sensor_msgs.msg import PointCloud2
 
+
+
+
 ########################################################################################################################
 x = 0.0 #Posición del robot
 y = 0.0
@@ -21,59 +24,6 @@ theta = 0.0
 #Angulo de distancia
 angulo_x=0.0
 angulo_y=0.0
-
-
-def callback_laser_original(data):
-    global yaw
-    global currentx
-    global currenty
-    global obstacles
-    global scale
-    global neighbours
-    global obst_neighbours
-
-    obst_neighbours = []
-    # range_min = data.range_min
-    angle_min = data.angle_min
-    angle_max = data.angle_max
-    angle_increment = data.angle_increment
-    ranges = np.array(data.ranges)
-    print(ranges)
-    print(f"{angle_min},{angle_max},{angle_increment}")
-
-    #Actualizar el grafo de obstaculos
-
-    """ if (min(ranges) <= scale):
-        obstacles = [(round(currentx + ranges[i] * 100 * math.cos(i * (math.pi / 180) + yaw)), round(currenty +
-                                                                                                     ranges[
-                                                                                                         i] * 100 * math.sin(
-            i * (math.pi / 180) + yaw))) for i in range(len(ranges)) if ranges[i] <= scale]
-        neighbours = np.array(findNeighbours(currenty, currentx))
-        obstacles = np.array(obstacles)
-        for obstacle in obstacles:
-            min_dist = float("inf")
-            obst_neighbour = 0
-            for neighbour in neighbours:
-                dist = (neighbour[0] - obstacle[0]) ** 2 + \
-                       (neighbour[1] - obstacle[1]) ** 2
-                if (dist < min_dist):
-                    min_dist = dist
-                    obst_neighbour = neighbour
-            obst_neighbours.append((obst_neighbour))
-        obst_neighbours = np.array(obst_neighbours)
-        obst_neighbours = np.unique(obst_neighbours, axis=0)
-        print(obst_neighbours) """
-
-def callback_angle(data):
-    global yaw
-    global currentx
-    global currenty
-    pose = data.pose.pose.position
-    currentx = round(pose.x*100)
-    currenty = round(pose.y*100)
-    rot_q = data.pose.pose.orientation
-    roll, pitch, yaw = euler_from_quaternion(
-        [rot_q.x, rot_q.y, rot_q.z, rot_q.w])
 
 def newOdom(msg):
     global x
@@ -138,7 +88,7 @@ class Graph:
         y_relativa = 0
         count = 0
         for i in ranges:
-            if i != float("inf"):
+            if i != float("inf") and i>0.2:
                 angulo_actual = count*angle_increment
                 x_relativa = math.cos((angulo_actual+theta))*i #Sacando la posición relativa de los puntos respecto al eje principal del mapa
                 y_relativa = math.sin((angulo_actual+theta))*i
@@ -150,12 +100,6 @@ class Graph:
                 Graph.bg[505-y_pixel,555+x_pixel] = (0,0,0)
             #Incrementamos el objeto
             count = count + 1
-        
-
-
-
-        
-
 
     # loop through image and create node object for each pixel
     def create_nodes(self):
@@ -315,6 +259,7 @@ class Graph:
         self.nodes[goal_node].rhs = 0
         new_open_list[goal_node] = 0  # key needs to be written here
         curr_node = goal_node
+        print(curr_node)
         parent = self.nodes[goal_node].parent
         while not parent == None:
             visited.append(parent)
@@ -340,10 +285,9 @@ class Graph:
             curr_node = self.get_smallest(new_open_list)
         new_path = []
         count = 0
-        print(f"Nodo actual: {curr_node}")
         while not self.nodes[curr_node].parent == None:
             #while not curr_node == goal_node:
-            Graph.bg[505 - curr_node[1], curr_node[0] + 555] = (250, 0, 0)
+            bg[505 - curr_node[1], curr_node[0] + 555] = (250, 0, 0)
             new_path.append(curr_node)
             curr_node = self.nodes[curr_node].parent
             count += 1
@@ -352,6 +296,8 @@ class Graph:
 
     # Travel across the received path
     def traverse(self,bg,current_path,rob_x,rob_y):
+        global x
+        global y
         global x_pixel_r
         global y_pixel_r
         #self.obstacle_space.add((18, 0))
@@ -389,7 +335,7 @@ class Graph:
                     while parent in self.obstacle_space:
                         print("Obstacle found at ", parent)
                         parent = self.nodes[parent].parent
-                    new_path = self.replan(p[0], p[1], rob_x, rob_y, current_path, Graph.bg)
+                    new_path = self.replan(p[0], p[1], 200, 0 , current_path, Graph.bg)
                     self.traverse(Graph.bg, new_path,150, 0)
                 cv2.imshow("Output", Graph.bg)
                 cv2.waitKey(1)
@@ -398,7 +344,7 @@ class Graph:
                 while np.sqrt((del_x) ** 2 + (del_y) ** 2) > 0.03:
                     del_x = g.x - x
                     del_y = g.y - y
-
+                    print(f"{del_x}{del_y}")
                     angle_to_goal = math.atan2(del_y, del_x)
 
                     if (angle_to_goal - theta) > 0.2:
@@ -424,8 +370,9 @@ class Graph:
                 vel.angular.z = 0.0
                 pub.publish(vel)
                 rate.sleep()
-
         return
+    
+
 ########################################################################################################################
 def initiate():
     # scale the window size
