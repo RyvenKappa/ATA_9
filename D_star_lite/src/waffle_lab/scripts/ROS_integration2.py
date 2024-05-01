@@ -44,18 +44,18 @@ def algorithm_to_real(position:str)->tuple:
     Estas posiciones se refieren desde la esquina izquierda arriba, siendo ese nodo 0,0
     Vamos a transformar estas posiciones para que respeten el centro
     """
-    x -=50
-    y -=50
+    x -=50 #Cambiar según tamaño del grid 100  es 50
+    y -=50 #Cambiar según tamaño del grid 100  es 50
     #Los convertimos a coordenadas reales
-    x = x*20/100
-    y = y*20/100
+    x = x*20/100 #Cambiar según tamaño del grid 100  es 50
+    y = y*20/100 #Cambiar según tamaño del grid 100  es 50
     return (x,-y)
 
 def real_to_algortihm(position:tuple)->str:
     #Del tipo (x,y)
     x = position[0]
     y = position[1]
-    return(f"x{x+50}y{50-y}")
+    return(f"x{x+50}y{50-y}") #Cambiar según tamaño del grid 100  es 50
 
 ########################################################################################################################
 # Class structures
@@ -63,7 +63,7 @@ def real_to_algortihm(position:tuple)->str:
 class MoveManager:
     subDepth=None
     def __init__(self) -> None:
-        MoveManager.graph=GridWorld(100,100)
+        MoveManager.graph=GridWorld(100,100) #Cambiar según tamaño del grid
     def callback_laser(self,data):
         global yaw
         global currentx
@@ -87,8 +87,8 @@ class MoveManager:
                 y_relativa = math.sin((angulo_actual+theta))*i
                 #Ahora hace falta meter esto en la lista negra exceptuando que sea un objetivo por el mapa indicado
                 #Por ahora vamos a asumir que todo es obstaculo
-                x_pixel = round((x + x_relativa)*50/10)
-                y_pixel = round((y + y_relativa)*50/10)
+                x_pixel = round((x + x_relativa)*50/10) #Cambiar según tamaño del grid 100  es 50
+                y_pixel = round((y + y_relativa)*50/10) #Cambiar según tamaño del grid 100  es 50
                 position:str = real_to_algortihm((x_pixel,y_pixel))
                 row = int(position[position.rfind("y")+1:])
                 column = int(position[1:position.rfind("y")])
@@ -124,8 +124,11 @@ class MoveManager:
         MoveManager.graph, queue, k_m = initDStarLite(MoveManager.graph, queue, s_start, s_goal, k_m)
         s_current = s_start
         done = False
+        iteration_time_start = 0
         while not done:
-            s_new,k_m = moveAndRescan(MoveManager.graph,queue,s_current,20,k_m)#3 es El rango
+            iteration_time_start = time.time()
+            s_new,k_m = moveAndRescan(MoveManager.graph,queue,s_current,5,k_m)#3 es El rango
+            print(time.time()-iteration_time_start)
             print(f"{s_new} nueva posición")
             #Nos movemos a s_new, que es del tipo "xnumeroynumero"
             #Necesitamos una transformación
