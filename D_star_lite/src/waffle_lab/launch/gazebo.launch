@@ -20,5 +20,10 @@
         name="motion_command"
         type="ROS_integration2.py"
         output="screen"
-    />	
+    />
+    <node
+        pkg="waffle_lab"
+        name="item_manager"
+        type="item_manager.py"
+    />
 </launch>

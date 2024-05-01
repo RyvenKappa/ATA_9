@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import rospy
+from gazebo_msgs.srv import DeleteModel
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
@@ -9,6 +10,10 @@ import numpy as np
 import math
 import time
 import matplotlib.pyplot as plt
+from std_msgs.msg import String #Para poder recibir Strings con el elemento a borrar
+
+
+
 #D*Lite Diego Aceituno Seoane
 from d_star_lite import initDStarLite, moveAndRescan
 from utils import stateNameToCoords
@@ -22,6 +27,26 @@ theta = 0.0
 #Angulo de distancia
 angulo_x=0.0
 angulo_y=0.0
+def remove_gazebo_model(model_name):
+    """
+    Removes a Gazebo model from the simulation.
+
+    Args:
+        model_name (str): The name of the model to remove.
+    """
+    try:
+        # Initialize ROS node
+        #rospy.init_node("remove_gazebo_model_node")
+
+        # Create a service proxy for the delete_model service
+        delete_model_proxy = rospy.ServiceProxy("/gazebo/delete_model", DeleteModel)
+
+        # Call the service to delete the model
+        delete_model_proxy(model_name)
+
+        rospy.loginfo(f"Model '{model_name}' removed from Gazebo.")
+    except rospy.ServiceException as e:
+        rospy.logerr(f"Error calling delete_model service: {e}")
 
 def newOdom(msg):
     global x
@@ -101,8 +126,8 @@ class MoveManager:
             #Incrementamos el objeto
             count = count + 1
 
-    # Travel across the received path
-    def traverse(self,start,goal,altura,ancho):
+    # Travel across the received path and try to remove item
+    def traverse(self,start,goal,altura,ancho,model_to_remove=""):
         #Comunicación con ROS
         rospy.init_node('speed_controller')
         sub = rospy.Subscriber('/odom', Odometry, newOdom)
@@ -110,6 +135,9 @@ class MoveManager:
         subDept = rospy.Subscriber("/scan",LaserScan,self.callback_laser)
         rate = rospy.Rate(4)
         vel = Twist()
+        #We publish a node to ask for trash managing
+        trash_manager_pub = rospy.Publisher("/manage_trash",String,queue_size=10)
+
 
         MoveManager.graph = GridWorld(ancho,altura)
         #Automatizar las coordenadas
@@ -135,6 +163,9 @@ class MoveManager:
             plt.plot(MoveManager.graph.cells)
             if str(s_new)=="goal":
                 s_new=s_goal
+                #We ask the to a node to remove the item and get it inside the robot
+                #Only happens once per item with the code
+                trash_manager_pub.publish(model_to_remove)
                 break
             else:
                 next = algorithm_to_real(s_new)
@@ -168,15 +199,20 @@ class MoveManager:
 
 ########################################################################################################################
 def initiate():
+
+    items = ["beer"]
+    
+    
     global x
     global y
     # scale the window size
+    
     height = 100
     width = 100
     inicio =(0,0)
     goal = (-10,13) # Cerveza
     manager = MoveManager()
-    manager.traverse(inicio,goal,height,width)
+    manager.traverse(inicio,goal,height,width,items[0])
 
     inicio = (-10,13)
     goal = (-22,-3) # Coca Cola1
