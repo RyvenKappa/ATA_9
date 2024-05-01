@@ -25,5 +25,6 @@
         pkg="waffle_lab"
         name="item_manager"
         type="item_manager.py"
+        output="screen"
     />
 </launch>
