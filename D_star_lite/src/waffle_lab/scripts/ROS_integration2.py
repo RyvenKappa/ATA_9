@@ -86,9 +86,8 @@ def real_to_algortihm(position:tuple)->str:
 # Class structures
 
 class MoveManager:
-    subDepth=None
-    def __init__(self) -> None:
-        MoveManager.graph=GridWorld(100,100) #Cambiar según tamaño del grid
+    subDepth = None
+    graph = None
     def callback_laser(self,data):
         global yaw
         global currentx
