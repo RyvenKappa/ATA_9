@@ -20,33 +20,17 @@ from utils import stateNameToCoords
 from grid import GridWorld
 
 ########################################################################################################################
-x = 0.0 #Posición del robot
-y = 0.0
-theta = 0.0
 
+#Posición del robot en Gazebo
+x = 0.0
+y = 0.0
+
+
+theta = 0.0
+bg = None
 #Angulo de distancia
 angulo_x=0.0
 angulo_y=0.0
-def remove_gazebo_model(model_name):
-    """
-    Removes a Gazebo model from the simulation.
-
-    Args:
-        model_name (str): The name of the model to remove.
-    """
-    try:
-        # Initialize ROS node
-        #rospy.init_node("remove_gazebo_model_node")
-
-        # Create a service proxy for the delete_model service
-        delete_model_proxy = rospy.ServiceProxy("/gazebo/delete_model", DeleteModel)
-
-        # Call the service to delete the model
-        delete_model_proxy(model_name)
-
-        rospy.loginfo(f"Model '{model_name}' removed from Gazebo.")
-    except rospy.ServiceException as e:
-        rospy.logerr(f"Error calling delete_model service: {e}")
 
 def newOdom(msg):
     global x
@@ -76,11 +60,15 @@ def algorithm_to_real(position:str)->tuple:
     y = y*20/100 #Cambiar según tamaño del grid 100  es 50
     return (x,-y)
 
-def real_to_algortihm(position:tuple)->str:
+
+def real_to_algortihm(position:tuple,string=True)->str:
     #Del tipo (x,y)
     x = position[0]
     y = position[1]
-    return(f"x{x+50}y{50-y}") #Cambiar según tamaño del grid 100  es 50
+    if string:
+        return (f"x{x+50}y{50-y}") #Cambiar según tamaño del grid 100  es 50
+    else:
+        return (x+50,50-y)
 
 ########################################################################################################################
 # Class structures
@@ -89,6 +77,7 @@ class MoveManager:
     subDepth = None
     graph = None
     def callback_laser(self,data):
+        global bg
         global yaw
         global currentx
         global currenty
@@ -122,11 +111,13 @@ class MoveManager:
                     for j in range(column-1,column+1):#x
                         if (MoveManager.graph.cells[i][j] == 0):
                             MoveManager.graph.cells[i][j] = -1
+                            bg[i][j]=(0,0,0) #Dibujamos los obstaculos en el grafo de obstaculos
             #Incrementamos el objeto
             count = count + 1
 
     # Travel across the received path and try to remove item
     def traverse(self,start,goal,altura,ancho,model_to_remove=""):
+        global bg
         #Comunicación con ROS
         rospy.init_node('speed_controller')
         sub = rospy.Subscriber('/odom', Odometry, newOdom)
@@ -137,8 +128,8 @@ class MoveManager:
         #We publish a node to ask for trash managing
         trash_manager_pub = rospy.Publisher("/manage_trash",String,queue_size=10)
 
-
-        MoveManager.graph = GridWorld(ancho,altura)
+        MoveManager.graph = GridWorld(100,100)
+        
         #Automatizar las coordenadas
         s_start = real_to_algortihm(start)
         s_goal = real_to_algortihm(goal)
@@ -148,14 +139,25 @@ class MoveManager:
         s_last = s_start
         queue = []
         move = False
+        
         MoveManager.graph, queue, k_m = initDStarLite(MoveManager.graph, queue, s_start, s_goal, k_m)
         s_current = s_start
         done = False
-        iteration_time_start = 0
+
+        #Dibujamos el inicio del trayecto y el destino final
+        start2 = real_to_algortihm(start,False)
+        end2 = real_to_algortihm(goal,False)
+        bg[start2[1]][start2[0]] = (255,0,0) #Inicio en azul
+        bg[end2[1]][end2[0]] = (0,0,255) #Destino en Rojo
+
+        #iteration_time_start = 0
         while not done:
-            iteration_time_start = time.time()
+            grande = cv2.resize(bg,(400,400))
+            cv2.imshow("D* Lite Path View",grande)
+            cv2.waitKey(1)
+            #iteration_time_start = time.time()
             s_new,k_m = moveAndRescan(MoveManager.graph,queue,s_current,5,k_m)#3 es El rango
-            print(time.time()-iteration_time_start)
+            #print(time.time()-iteration_time_start)
             print(f"{s_new} nueva posición")
             #Nos movemos a s_new, que es del tipo "xnumeroynumero"
             #Necesitamos una transformación
@@ -184,6 +186,10 @@ class MoveManager:
                     vel.angular.z = 0.2 * (turn/abs(turn))
                 pub.publish(vel)
                 rate.sleep()
+            #Al haber llegado a la nueva posición, dibujamos ese anterior recorrido
+            x_new = int(s_new[1:s_new.rfind("y")])
+            y_new = int(s_new[s_new.rfind("y")+1:])
+            bg[y_new][x_new]=(0,255,0)
             vel.linear.x = 0.0
             vel.angular.z = 0.0
             pub.publish(vel)
@@ -198,16 +204,16 @@ class MoveManager:
 
 ########################################################################################################################
 def initiate():
-
+    global bg
+    #Lista de nombre de items a obtener
     items = ["beer"]
-    
-    
-    global x
-    global y
-    # scale the window size
-    
+
     height = 100
     width = 100
+    bg = np.ones((100,100,3),np.uint8) * 255
+    #grande = cv2.resize(bg,(500,500))
+    #cv2.imshow("Imagen de prueba",grande)
+    #cv2.waitKey(0)
     inicio =(0,0)
     goal = (-10,13) # Cerveza
     manager = MoveManager()
