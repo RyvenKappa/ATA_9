@@ -205,15 +205,13 @@ class MoveManager:
 ########################################################################################################################
 def initiate():
     global bg
-    #Lista de nombre de items a obtener
+    #Lista de nombre de items a obtener, aquí definimos los modelos
     items = ["beer"]
 
     height = 100
     width = 100
     bg = np.ones((100,100,3),np.uint8) * 255
-    #grande = cv2.resize(bg,(500,500))
-    #cv2.imshow("Imagen de prueba",grande)
-    #cv2.waitKey(0)
+
     inicio =(0,0)
     goal = (-10,13) # Cerveza
     manager = MoveManager()
