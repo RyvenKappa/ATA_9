@@ -94,7 +94,7 @@ class MoveManager:
         y_relativa = 0
         count = 0
         for i in ranges:
-            if i != float("inf"):
+            if i != float("inf") and i >=float(0.4):
                 angulo_actual = count*angle_increment
                 x_relativa = math.cos((angulo_actual+theta))*i #Sacando la posición relativa de los puntos respecto al eje principal del mapa
                 y_relativa = math.sin((angulo_actual+theta))*i
@@ -213,8 +213,28 @@ def initiate():
     cv2.namedWindow("D* Lite Path View")
 
     inicio = (0,0)
-    goal = (-17,0) #Primer objeto
+    goal = (-18,0) #Primera basura sin obstaculo
     manager.traverse(inicio,goal,height,width,"coke_can_0")
+
+    inicio = (-18,0)
+    goal = (-18,-26) #Segunda basura con obstaculo
+    manager.traverse(inicio,goal,height,width,"coke_can_2_clone_clone_0")
+
+    inicio = (-18,-26)
+    goal = (5,-19) #Tercera basura con obstaculo dinámico
+    manager.traverse(inicio,goal,height,width,"coke_can_2")
+
+    inicio = (5,-19)
+    goal = (12,-10) #Cuarta basura
+    manager.traverse(inicio,goal,height,width,"coke_can_2_clone")
+    
+    inicio = (12,-10)#
+    goal = (12,-10) #Quinta basura
+    manager.traverse(inicio,goal,height,width,"coke_can_2_clone_clone")
+
+    inicio = (-18,-26)#
+    goal = (-42,35) #Cuarto objetivo ir al cubo de basura
+    manager.traverse(inicio,goal,height,width)
 """
     #Lista de nombre de items a obtener, aquí definimos los modelos
     items = ["beer"]
