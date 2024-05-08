@@ -154,7 +154,8 @@ class MoveManager:
         while not done:
             grande = cv2.resize(bg,(400,400))
             cv2.imshow("D* Lite Path View",grande)
-            cv2.waitKey(1)
+            cv2.moveWindow("D* Lite Path View",10,50)
+            cv2.waitKey(16)
             #iteration_time_start = time.time()
             s_new,k_m = moveAndRescan(MoveManager.graph,queue,s_current,5,k_m)#3 es El rango
             #print(time.time()-iteration_time_start)
@@ -205,12 +206,20 @@ class MoveManager:
 ########################################################################################################################
 def initiate():
     global bg
-    #Lista de nombre de items a obtener, aquí definimos los modelos
-    items = ["beer"]
-
     height = 100
     width = 100
     bg = np.ones((100,100,3),np.uint8) * 255
+    manager = MoveManager()
+    cv2.namedWindow("D* Lite Path View")
+
+    inicio = (0,0)
+    goal = (-17,0) #Primer objeto
+    manager.traverse(inicio,goal,height,width,"coke_can_0")
+"""
+    #Lista de nombre de items a obtener, aquí definimos los modelos
+    items = ["beer"]
+
+
 
     inicio =(0,0)
     goal = (-10,13) # Cerveza
@@ -224,7 +233,7 @@ def initiate():
     inicio = (-22,-3)
     goal = (-10,-19) # CocaCola 2
     manager.traverse(inicio,goal,height,width)
-"""
+
     inicio = (-10,-19)
     goal = (19,7) # Coca Cola 3
     manager.traverse(inicio,goal,height,width)  
